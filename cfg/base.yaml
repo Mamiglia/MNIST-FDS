@@ -1,0 +1,21 @@
+# conf/config.yaml
+defaults:
+  - _self_
+  - net: default
+
+net:
+  depth: 3
+  width: 32
+  num_classes: 10
+
+trainer:
+  max_epochs: 10
+
+dataset:
+  batch_size: 32
+  train_size: 0.8
+
+wandb:
+  entity: "mamiglia"
+  project: "fds-mnist"
+  name: ${net/depth}x${net/width}

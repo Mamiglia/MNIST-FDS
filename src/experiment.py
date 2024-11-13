@@ -1,11 +1,11 @@
 import hydra
 from omegaconf import DictConfig
 import lightning as lit
-from base import Net
+from net.base import Net
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, random_split
 import wandb
-from pytorch_lightning.loggers import WandbLogger
+from lightning.loggers import WandbLogger
 from dataset.loader import load_dataset
 
 @hydra.main(config_path="conf", config_name="config")

@@ -5,32 +5,30 @@ from torchmetrics import Accuracy
 import torch.nn as nn
 import torch.nn.functional as F
 
+from hydra.utils import instantiate
+
 from cnn import ConvBlock, FeedForwardBlock
 
 class Net(lit.LightningModule):
-    def __init__(self, 
-                 input_channels=1, 
-                 num_classes=10, 
-                 depth=1,
-                 conv_params: dict = {},
-                 optimizer_params: dict = {}):
+    def __init__(self,
+                 depth: int,
+                embed, block, unembed, optimizer
+                ):
                  
         super(Net, self).__init__()
         self.save_hyperparameters()
-        self.optimizer_params = optimizer_params
 
-
-        self.conv = [ConvBlock(input_channels, **conv_params)]
-        self.conv += [ConvBlock(**conv_params) for _ in range(depth-1)]
-        self.conv = nn.Sequential(*self.conv)
+        self.embed = instantiate(embed)
+        self.features = nn.Sequential(instantiate(block) for _ in range(depth-1))
         
-        self.classifier = nn.LazyLinear(num_classes)        
+        self.unembed = instantiate(unembed)   
 
 
     def forward(self, x):
-        x = self.conv(x)
+        x = self.embed(x)
+        x = self.features(x)
         x = x.view(x.size(0), -1)
-        x = self.fc(x)
+        x = self.unembed(x)
         return x
 
     def training_step(self, batch, batch_idx):
@@ -48,5 +46,5 @@ class Net(lit.LightningModule):
         self.log('val_acc', self.accuracy(y_hat, y), prog_bar=True)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), **self.hparams.optimizer_params)
+        optimizer = instantiate(self.hparams.optimizer, self.parameters())
         return optimizer

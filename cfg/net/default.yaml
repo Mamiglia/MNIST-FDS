@@ -1,0 +1,23 @@
+defaults:
+ - /block: conv
+ - /embed: conv
+ - /unembed: lazy_linear
+ - /optimizer: adam
+
+depth: ???
+width: ???
+num_classes: ???
+
+block:
+  in_channels: ${width}
+
+embed:
+  in_channels: 1
+  out_channels: ${width}
+
+unembed:
+  out_features: ${num_classes}
+
+optimizer:
+  weight_decay: 0.0005
+
