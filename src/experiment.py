@@ -5,27 +5,61 @@ from net.base import Net
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, random_split
 import wandb
-from lightning.loggers import WandbLogger
+from lightning.pytorch.loggers import WandbLogger
 from dataset.loader import load_dataset
 
-@hydra.main(config_path="conf", config_name="config")
+import lightning.pytorch.callbacks as cb
+
+from omegaconf import OmegaConf
+
+import os
+
+@hydra.main(config_path="../cfg", config_name="base")
 def main(cfg: DictConfig):
-    # Initialize Wandb logger
-    wandb_logger = WandbLogger(project=cfg.wandb.project, name=cfg.wandb.name)
+    lit.seed_everything(cfg.seed)
+    wandb_logger = WandbLogger(**cfg.wandb)
+
+    
+    model = Net(cfg.net)
 
     train_loader, val_loader, test_loader = load_dataset(**cfg.dataset)
 
-    model = Net(**cfg.net)
+    trainer = lit.Trainer(logger=wandb_logger, callbacks=[
+        cb.EarlyStopping(
+            monitor="val_acc",
+            patience=1,
+            verbose=True,
+            mode="max", min_delta=1e-2
+        )], **cfg.trainer)
 
-    trainer = lit.Trainer(logger=wandb_logger, **cfg.trainer)
-
-    # Assuming you have a DataLoader `train_loader` and `val_loader`
+    print('Training...')
     trainer.fit(model, train_loader, val_loader)
     
-    # Assuming you have a DataLoader `test_loader`
+    print('Testing...')
     trainer.test(model, test_loader)
     
+    hyperparams_dict = OmegaConf.to_container(cfg, resolve=True)
+    hyperparams_dict["info"] = {  # type: ignore
+        "num_params": get_num_params(model),
+    }
+    wandb_logger.log_hyperparams(hyperparams_dict)  # type: ignore
+
+def get_num_params(module):
+    """
+    Returns the number of parameters in a Lightning module.
+    
+    Args:
+        module (lightning.pytorch.LightningModule): The Lightning module to get the number of parameters for.
+    
+    Returns:
+        int: The number of parameters in the module.
+    """
+    total_params = sum(p.numel() for p in module.parameters() )
+    return total_params
+
+
 
 
 if __name__ == "__main__":
+    os.environ['HYDRA_FULL_ERROR'] = "1"
     main()
