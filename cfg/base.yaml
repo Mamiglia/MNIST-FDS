@@ -3,6 +3,8 @@ defaults:
   - _self_
   - net: default
 
+seed: 42
+
 net:
   depth: 3
   width: 32
@@ -10,12 +12,13 @@ net:
 
 trainer:
   max_epochs: 10
+  log_every_n_steps: 10
 
 dataset:
-  batch_size: 32
+  batch_size: 1024
   train_size: 0.8
 
 wandb:
   entity: "mamiglia"
   project: "fds-mnist"
-  name: ${net/depth}x${net/width}
+  name: ${net.depth}x${net.width}
