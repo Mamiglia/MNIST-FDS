@@ -1,4 +1,4 @@
-_target_: src.net.cnn.CNN
+_target_: net.cnn.ConvBlock
 in_channels: ???
 out_channels: ???
 kernel_size: 3
