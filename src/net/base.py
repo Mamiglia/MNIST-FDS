@@ -7,21 +7,21 @@ import torch.nn.functional as F
 
 from hydra.utils import instantiate
 
-from cnn import ConvBlock, FeedForwardBlock
+from net.cnn import ConvBlock, FeedForwardBlock
 
 class Net(lit.LightningModule):
-    def __init__(self,
-                 depth: int,
-                embed, block, unembed, optimizer
+    def __init__(self,cfg
                 ):
                  
         super(Net, self).__init__()
         self.save_hyperparameters()
+        self.depth = cfg.depth
+        self.cfg = cfg
 
-        self.embed = instantiate(embed)
-        self.features = nn.Sequential(instantiate(block) for _ in range(depth-1))
+        self.embed = instantiate(cfg.embed)
+        self.features = nn.Sequential(*[instantiate(cfg.block) for _ in range(self.depth-1)])
         
-        self.unembed = instantiate(unembed)   
+        self.unembed = instantiate(cfg.unembed)   
 
 
     def forward(self, x):
@@ -35,7 +35,7 @@ class Net(lit.LightningModule):
         x, y = batch
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y)
-        self.log('train_loss', loss)
+        self.log('train_loss', loss, prog_bar=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -43,8 +43,17 @@ class Net(lit.LightningModule):
         y_hat = self(x)
         loss = F.cross_entropy(y_hat, y)
         self.log('val_loss', loss)
-        self.log('val_acc', self.accuracy(y_hat, y), prog_bar=True)
+        self.log('val_acc', accuracy(y_hat, y), prog_bar=True)
+
+    def test_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self(x)
+        loss = F.cross_entropy(y_hat, y)
+        self.log('test_loss', loss)
+        self.log('test_acc', accuracy(y_hat, y), prog_bar=True)
 
     def configure_optimizers(self):
-        optimizer = instantiate(self.hparams.optimizer, self.parameters())
+        optimizer = instantiate(self.cfg.optimizer, self.parameters())
         return optimizer
+    
+accuracy = Accuracy(task='multiclass', num_classes=10)
