@@ -1,2 +1,2 @@
-_target_: nn.LazyLinear
+_target_: torch.nn.LazyLinear
 out_features: ???
