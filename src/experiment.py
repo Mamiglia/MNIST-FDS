@@ -6,7 +6,7 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader, random_split
 import wandb
 from lightning.pytorch.loggers import WandbLogger
-from dataset.loader import load_dataset
+from dataset.loader import load_mnist
 
 import lightning.pytorch.callbacks as cb
 
@@ -19,10 +19,9 @@ def main(cfg: DictConfig):
     lit.seed_everything(cfg.seed)
     wandb_logger = WandbLogger(**cfg.wandb)
 
-    
     model = Net(cfg.net)
 
-    train_loader, val_loader, test_loader = load_dataset(**cfg.dataset)
+    train_loader, val_loader, test_loader = load_mnist(**cfg.dataset)
 
     trainer = lit.Trainer(logger=wandb_logger, callbacks=[
         cb.EarlyStopping(
