@@ -1,0 +1,4 @@
+_target_: net.lenet.LeNet
+hidden_dim: 128
+filters: 6
+dropout: 0.2

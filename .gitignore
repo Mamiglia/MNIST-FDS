@@ -1,3 +1,4 @@
 outputs
 *.pyc
 multirun
+data/cifar-10*
