@@ -7,7 +7,6 @@ import torch.nn.functional as F
 
 from hydra.utils import instantiate
 
-from net.cnn import ConvBlock, FeedForwardBlock
 
 class Net(lit.LightningModule):
     def __init__(self,cfg
@@ -15,21 +14,23 @@ class Net(lit.LightningModule):
                  
         super(Net, self).__init__()
         self.save_hyperparameters()
-        self.depth = cfg.depth
-        self.cfg = cfg
+        # self.depth = cfg.depth
+        # self.cfg = cfg
 
-        self.embed = instantiate(cfg.embed)
-        self.features = nn.Sequential(*[instantiate(cfg.block) for _ in range(self.depth-1)])
+        # self.embed = instantiate(cfg.embed)
+        # self.features = nn.Sequential(*[instantiate(cfg.block) for _ in range(self.depth-1)])
         
-        self.unembed = instantiate(cfg.unembed)   
+        # self.unembed = instantiate(cfg.unembed)   
+        
+        self.net = instantiate(cfg.net)
 
 
     def forward(self, x):
-        x = self.embed(x)
-        x = self.features(x)
-        x = x.view(x.size(0), -1)
-        x = self.unembed(x)
-        return x
+        # x = self.embed(x)
+        # x = self.features(x)
+        # x = x.view(x.size(0), -1)
+        # x = self.unembed(x)
+        return self.net(x)
 
     def training_step(self, batch, batch_idx):
         x, y = batch
